@@ -8,6 +8,7 @@
 import UIKit
 
 public class PSPickerViewBase: UIView {
+    public typealias PSPickerViewCallback = (_ madeChoice: Bool) -> Void
     
     public var toolbarHeight: CGFloat = 44 {
         didSet {
@@ -72,6 +73,35 @@ public class PSPickerViewBase: UIView {
     internal func customPicker() -> UIView {
         fatalError("Fatal error - has to be implemented in subclasses")
     }
+    
+    public func present(in view:UIView, callback:@escaping PSPickerViewCallback) {
+        view.addSubview(self)
+        translatesAutoresizingMaskIntoConstraints = false
+        
+        view.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        view.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        view.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
+        view.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        
+        backgroundView.alpha = 0
+        pickerViewBottomConstraint?.constant = -pickerHeight
+        setNeedsLayout()
+        
+        pickerViewBottomConstraint?.constant = 0
+        
+        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
+            self.backgroundView.alpha = 1
+            self.setNeedsLayout()
+        })
+    }
+    
+    public func presentInWindowWithBlock(callback: @escaping PSPickerViewCallback) {
+        if let window = UIApplication.shared.delegate?.window as? UIWindow {
+            present(in: window, callback: callback)
+        } else {
+            fatalError("There is no window!")
+        }
+    }
 
     @objc public func onDone(sender: AnyObject) {
         dismiss()
@@ -82,7 +112,13 @@ public class PSPickerViewBase: UIView {
     }
     
     public func dismiss() {
-        
+        pickerViewBottomConstraint?.constant = -pickerHeight
+        UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
+            self.backgroundView.alpha = 0
+            self.setNeedsLayout()
+        }, completion: { _ in
+            self.removeFromSuperview()
+        })
     }
     
     public override init(frame: CGRect) {
