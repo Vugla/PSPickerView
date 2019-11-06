@@ -10,12 +10,12 @@ public class PSPickerView: PSPickerViewBase {
     
     public var selectedIndex:Int = 0
     
-    init(values: [String]) {
+    public init(values: [String]) {
         super.init(frame: CGRect.zero)
         self.values = values
     }
     
-    init(numberOfOptions: Int, customOptionView: @escaping PSPickerViewOptionView) {
+    public init(numberOfOptions: Int, customOptionView: @escaping PSPickerViewOptionView) {
         super.init(frame: CGRect.zero)
         self.numberOfOptions = numberOfOptions
         self.customOptionView = customOptionView
