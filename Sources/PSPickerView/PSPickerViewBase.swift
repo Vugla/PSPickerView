@@ -57,6 +57,12 @@ public class PSPickerViewBase: UIView {
     }()
     
     private lazy var buttonsStackView: UIStackView = {
+        doneButton.setTitle(NSLocalizedString("Done", comment: "Title for done button in PSPickerView"), for: .normal)
+        doneButton.tintColor = tintColor
+        doneButton.addTarget(self, action: #selector(onDone(sender:)), for: .touchUpInside)
+        cancelButton.setTitle(NSLocalizedString("Cancel", comment: "Title for cancel button in PSPickerView"), for: .normal)
+        cancelButton.tintColor = tintColor
+        cancelButton.addTarget(self, action: #selector(onCancel(sender:)), for: .touchUpInside)
         let spacingView = UIView()
         spacingView.backgroundColor = .clear
         spacingView.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -203,11 +209,11 @@ public class PSPickerViewBase: UIView {
     private func addBackgroundViewToViewHierarchy() {
         backgroundView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(backgroundView)
-        sendSubviewToBack(backgroundView)
         backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         backgroundView.topAnchor.constraint(equalTo: topAnchor).isActive = true
         backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor).isActive = true
+        sendSubviewToBack(backgroundView)
     }
     
     private func setupDefaultBackgroundView() {
@@ -216,6 +222,8 @@ public class PSPickerViewBase: UIView {
         } else {
             backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         }
+        let tap = UIGestureRecognizer(target: self, action: onCancel(sender: backgroundView))
+        backgroundView.addGestureRecognizer(tap)
     }
 }
 
