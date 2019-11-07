@@ -222,7 +222,7 @@ public class PSPickerViewBase: UIView {
         } else {
             backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         }
-        let tap = UIGestureRecognizer(target: self, action: onCancel(sender: backgroundView))
+        let tap = UIGestureRecognizer(target: self, action: #selector(onCancel(sender:)))
         backgroundView.addGestureRecognizer(tap)
     }
 }
