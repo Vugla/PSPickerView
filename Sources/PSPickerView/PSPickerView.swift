@@ -35,11 +35,11 @@ public class PSPickerView: PSPickerViewBase {
         return pickerView
     }
     
-    override public func onDone(sender: AnyObject) {
+    override public func onDone() {
         if let indexBeforeDismiss = indexSelectedBeforeDismissal {
             selectedIndex = indexBeforeDismiss
         }
-        super.onDone(sender: sender)
+        super.onDone()
     }
 }
 

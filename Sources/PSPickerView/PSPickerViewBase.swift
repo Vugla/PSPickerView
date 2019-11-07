@@ -39,7 +39,7 @@ public class PSPickerViewBase: UIView {
             buttonsStackView.insertArrangedSubview(doneButton, at: 0)
         }
     }
-    public var backgroundView: UIView = UIView() {
+    public var backgroundView: UIView = UIButton() {
         didSet {
             oldValue.removeFromSuperview()
             addBackgroundViewToViewHierarchy()
@@ -57,12 +57,14 @@ public class PSPickerViewBase: UIView {
     }()
     
     private lazy var buttonsStackView: UIStackView = {
+        doneButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        doneButton.setTitleColor(UIColor.systemBlue, for: .normal)
         doneButton.setTitle(NSLocalizedString("Done", comment: "Title for done button in PSPickerView"), for: .normal)
-        doneButton.tintColor = tintColor
-        doneButton.addTarget(self, action: #selector(onDone(sender:)), for: .touchUpInside)
+        doneButton.addTarget(self, action: #selector(onDone), for: .touchUpInside)
+        cancelButton.contentEdgeInsets = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        cancelButton.setTitleColor(UIColor.systemBlue, for: .normal)
         cancelButton.setTitle(NSLocalizedString("Cancel", comment: "Title for cancel button in PSPickerView"), for: .normal)
-        cancelButton.tintColor = tintColor
-        cancelButton.addTarget(self, action: #selector(onCancel(sender:)), for: .touchUpInside)
+        cancelButton.addTarget(self, action: #selector(onCancel), for: .touchUpInside)
         let spacingView = UIView()
         spacingView.backgroundColor = .clear
         spacingView.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -75,12 +77,22 @@ public class PSPickerViewBase: UIView {
     private var pickerViewBottomConstraint: NSLayoutConstraint?
     private var pickerViewHeightConstraint: NSLayoutConstraint?
     private var toolbarHeightConstraint: NSLayoutConstraint?
+    private var callbackBlock: PSPickerViewCallback?
     
     internal func customPicker() -> UIView {
         fatalError("Fatal error - has to be implemented in subclasses")
     }
     
     public func present(in view:UIView, callback:@escaping PSPickerViewCallback) {
+        callbackBlock = callback
+        
+        if #available(iOS 13.0, *) {
+            pickerView.backgroundColor = .tertiarySystemBackground
+        } else {
+            pickerView.backgroundColor = .white
+        }
+        addPickerToViewHierarchy()
+        
         view.addSubview(self)
         translatesAutoresizingMaskIntoConstraints = false
         
@@ -90,18 +102,18 @@ public class PSPickerViewBase: UIView {
         view.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
         backgroundView.alpha = 0
-        pickerViewBottomConstraint?.constant = -pickerHeight
-        setNeedsLayout()
+        pickerViewBottomConstraint?.constant = pickerHeight
+        layoutIfNeeded()
         
         pickerViewBottomConstraint?.constant = 0
         
         UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
             self.backgroundView.alpha = 1
-            self.setNeedsLayout()
+            self.layoutIfNeeded()
         })
     }
     
-    public func presentInWindowWithBlock(callback: @escaping PSPickerViewCallback) {
+    public func presentInWindow(callback: @escaping PSPickerViewCallback) {
         if let window = UIApplication.shared.delegate?.window as? UIWindow {
             present(in: window, callback: callback)
         } else {
@@ -109,19 +121,21 @@ public class PSPickerViewBase: UIView {
         }
     }
 
-    @objc public func onDone(sender: AnyObject) {
+    @objc public func onDone() {
+        callbackBlock?(true)
         dismiss()
     }
     
-    @objc public func onCancel(sender: AnyObject) {
+    @objc public func onCancel() {
+        callbackBlock?(false)
         dismiss()
     }
     
     public func dismiss() {
-        pickerViewBottomConstraint?.constant = -pickerHeight
+        pickerViewBottomConstraint?.constant = pickerHeight
         UIView.animate(withDuration: 0.25, delay: 0, options: .curveEaseOut, animations: {
             self.backgroundView.alpha = 0
-            self.setNeedsLayout()
+            self.layoutIfNeeded()
         }, completion: { _ in
             self.removeFromSuperview()
         })
@@ -138,16 +152,9 @@ public class PSPickerViewBase: UIView {
     
     private func commonInit() {
         backgroundColor = .clear
-        if #available(iOS 13.0, *) {
-            pickerView.backgroundColor = .tertiarySystemBackground
-        } else {
-            pickerView.backgroundColor = .white
-        }
-        addPickerToViewHierarchy()
-        
+       
         setupDefaultToolBar()
         addToolbarToViewHierarchy()
-        
         setupDefaultBackgroundView()
         addBackgroundViewToViewHierarchy()
     }
@@ -169,6 +176,8 @@ public class PSPickerViewBase: UIView {
         
         pickerViewBottomConstraint = pickerView.bottomAnchor.constraint(equalTo: bottomAnchor)
         pickerViewBottomConstraint?.isActive = true
+        
+        toolbar.bottomAnchor.constraint(equalTo: pickerView.topAnchor).isActive = true
     }
     
     private func addToolbarToViewHierarchy() {
@@ -177,8 +186,6 @@ public class PSPickerViewBase: UIView {
         
         toolbarHeightConstraint = toolbar.heightAnchor.constraint(equalToConstant: toolbarHeight)
         toolbarHeightConstraint?.isActive = true
-        
-        toolbar.bottomAnchor.constraint(equalTo: pickerView.topAnchor).isActive = true
         
         toolbar.leadingAnchor.constraint(equalTo: leadingAnchor).isActive = true
         toolbar.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
@@ -218,12 +225,11 @@ public class PSPickerViewBase: UIView {
     
     private func setupDefaultBackgroundView() {
         if #available(iOS 13.0, *) {
-            backgroundView.backgroundColor = UIColor.tertiarySystemFill
+            backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         } else {
             backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         }
-        let tap = UIGestureRecognizer(target: self, action: #selector(onCancel(sender:)))
-        backgroundView.addGestureRecognizer(tap)
+        (backgroundView as? UIButton)?.addTarget(self, action: #selector(onCancel), for: .touchUpInside)
     }
 }
 
